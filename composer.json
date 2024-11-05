@@ -1,1 +1,20 @@
-
+{
+    "name": "hybridmind/validate",
+    "description": "A robust and flexible validation library for PHP.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "HybridMind",
+            "email": "hybridmind1337@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "hybridmind\\": "src/"
+        }
+    }
+}
