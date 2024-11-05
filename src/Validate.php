@@ -224,13 +224,13 @@ class Validate
 
     private function validateDatabase(string $item, $value, string $rule, array $rule_value): void
     {
-        // Проверка за достатъчни параметри
+        // Check for sufficient parameters
         if (empty($rule_value['table']) || empty($rule_value['column'])) {
-            $this->addError($item, $rule, $value, "Няма достатъчно предадена информация за проверка в базата данни: {$item}");
+            $this->addError($item, $rule, $value, "Insufficient information provided for database validation: {$item}");
             return;
         }
 
-        // Изпълнение на SQL заявка за проверка
+        // Execute SQL query for validation
         $result = Application::DB()->query(
             "SELECT * FROM {$rule_value['table']} WHERE {$rule_value['column']} = ?",
             [$value]
@@ -238,11 +238,10 @@ class Validate
 
         if ($rule === self::DB_NOT_EXISTS && $result) {
             $this->addError($item, 'db_not_exists', $value, $rule_value['message']);
-        } elseif ($rule === self::DB_EXISTS && $result) {  // Проверяваме дали $result е истинско
+        } elseif ($rule === self::DB_EXISTS && $result) {  // Check if $result is true
             $this->addError($item, 'db_exists', $value, $rule_value['message']);
         }
     }
-
 
     private function isValidDomain(string $value): bool
     {
@@ -256,19 +255,19 @@ class Validate
         $errors = [];
 
         if (strlen($password) < 6 || strlen($password) > 64) {
-            $errors[] = 'Паролата трябва да бъде с дължина между 6 и 64 знака';
+            $errors[] = 'Password must be between 6 and 64 characters long';
         }
 
         if (!preg_match('@[A-Z]@', $password)) {
-            $errors[] = 'Паролата трябва да съдържа поне една главна буква';
+            $errors[] = 'Password must contain at least one uppercase letter';
         }
 
         if (!preg_match('@[a-z]@', $password)) {
-            $errors[] = 'Паролата трябва да съдържа поне една малка буква';
+            $errors[] = 'Password must contain at least one lowercase letter';
         }
 
         if (!preg_match('@[0-9]@', $password)) {
-            $errors[] = 'Паролата трябва да съдържа поне една цифра';
+            $errors[] = 'Password must contain at least one digit';
         }
 
         if (!empty($errors)) {
