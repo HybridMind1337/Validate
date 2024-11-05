@@ -9,34 +9,42 @@ class Validate
     private array $errors = [];
     private bool $passed = false;
 
-    const REQUIRED = 'required';
-    const MAX = 'max';
-    const MIN = 'min';
-    const NUMERIC = 'numeric';
-    const INT = 'int';
-    const PRICE = 'price';
-    const MIN_NUMBER = 'min_number';
-    const MAX_NUMBER = 'max_number';
-    const DATE = 'date';
-    const IS_ARRAY = 'is_array';
-    const ARRAY_HAS_ONE_NOT_EMPTY = 'array_has_one_not_empty';
-    const ARRAY_HAS_ONE = 'array_has_one';
-    const IN_ARRAY = 'in_array';
-    const OBJECT = 'object';
-    const EQUAL = 'equal';
-    const NOT_EQUAL = 'not_equal';
-    const DOMAIN = 'domain';
-    const HTML = 'html';
-    const DB_NOT_EXISTS = 'db_not_exists';
-    const DB_EXISTS = 'db_exists';
-    const TEXTAREA = 'textarea';
-    const GREATER_THAN = 'greater_than';
-    const EMAIL = 'email';
-    const PREG_MATCH = 'preg_match';
-    const ONLY_LATIN_LETTERS = 'only_latin_letters';
-    const POST_MATCH = 'post_match';
-    const POST_NOT_MATCH = 'post_not_match';
+    // Constants representing validation rules
+    const REQUIRED = 'required';  // Ensures the value is not empty
+    const MAX = 'max';  // Ensures the value does not exceed a maximum length
+    const MIN = 'min';  // Ensures the value meets a minimum length
+    const NUMERIC = 'numeric';  // Ensures the value is numeric
+    const INT = 'int';  // Ensures the value is an integer
+    const PRICE = 'price';  // Ensures the value is a valid price format
+    const MIN_NUMBER = 'min_number';  // Ensures the value is greater than or equal to a minimum number
+    const MAX_NUMBER = 'max_number';  // Ensures the value is less than or equal to a maximum number
+    const DATE = 'date';  // Ensures the value is a valid date
+    const IS_ARRAY = 'is_array';  // Ensures the value is an array
+    const ARRAY_HAS_ONE_NOT_EMPTY = 'array_has_one_not_empty';  // Ensures the array has at least one non-empty value
+    const ARRAY_HAS_ONE = 'array_has_one';  // Ensures the array has at least one value
+    const IN_ARRAY = 'in_array';  // Ensures the value is in a specified array
+    const OBJECT = 'object';  // Ensures the value is an object
+    const EQUAL = 'equal';  // Ensures the value equals a specified value
+    const NOT_EQUAL = 'not_equal';  // Ensures the value does not equal a specified value
+    const DOMAIN = 'domain';  // Ensures the value is a valid domain
+    const HTML = 'html';  // Ensures the value contains HTML tags
+    const DB_NOT_EXISTS = 'db_not_exists';  // Ensures the value does not exist in the database
+    const DB_EXISTS = 'db_exists';  // Ensures the value exists in the database
+    const TEXTAREA = 'textarea';  // Ensures the value is not empty when trimmed
+    const GREATER_THAN = 'greater_than';  // Ensures the value is greater than another field's value
+    const EMAIL = 'email';  // Ensures the value is a valid email address
+    const PREG_MATCH = 'preg_match';  // Ensures the value matches a specified regular expression
+    const ONLY_LATIN_LETTERS = 'only_latin_letters';  // Ensures the value contains only Latin letters
+    const POST_MATCH = 'post_match';  // Ensures the value matches another field's value
+    const POST_NOT_MATCH = 'post_not_match';  // Ensures the value does not match another field's value
 
+    /**
+     * Checks an array of items against a set of rules.
+     * 
+     * @param array $items The items to check.
+     * @param array $source The source data to validate.
+     * @return self
+     */
     public function check(array $items, array $source): self
     {
         foreach ($items as $item => $rules) {
@@ -202,16 +210,34 @@ class Validate
         return $this;
     }
 
+    /**
+     * Checks if the validation passed.
+     * 
+     * @return bool True if validation passed, otherwise false.
+     */
     public function isValid(): bool
     {
         return $this->passed;
     }
 
+    /**
+     * Returns the validation errors.
+     * 
+     * @return array The validation errors.
+     */
     public function getErrors(): array
     {
         return $this->errors;
     }
 
+    /**
+     * Adds an error to the errors array.
+     * 
+     * @param string $field The field name.
+     * @param string $rule The validation rule.
+     * @param mixed $value The value that failed validation.
+     * @param string $message The error message.
+     */
     private function addError(string $field, string $rule, $value, string $message): void
     {
         $this->errors[] = [
@@ -222,15 +248,23 @@ class Validate
         ];
     }
 
+    /**
+     * Validates the value against database records.
+     * 
+     * @param string $item The item name.
+     * @param mixed $value The value to check.
+     * @param string $rule The validation rule.
+     * @param array $rule_value The rule parameters.
+     */
     private function validateDatabase(string $item, $value, string $rule, array $rule_value): void
     {
-        // Check for sufficient parameters
+        // Ensure sufficient parameters are provided
         if (empty($rule_value['table']) || empty($rule_value['column'])) {
-            $this->addError($item, $rule, $value, "Insufficient information provided for database validation: {$item}");
+            $this->addError($item, $rule, $value, "Insufficient information provided for database check: {$item}");
             return;
         }
 
-        // Execute SQL query for validation
+        // Execute SQL query to check
         $result = Application::DB()->query(
             "SELECT * FROM {$rule_value['table']} WHERE {$rule_value['column']} = ?",
             [$value]
@@ -238,11 +272,17 @@ class Validate
 
         if ($rule === self::DB_NOT_EXISTS && $result) {
             $this->addError($item, 'db_not_exists', $value, $rule_value['message']);
-        } elseif ($rule === self::DB_EXISTS && $result) {  // Check if $result is true
+        } elseif ($rule === self::DB_EXISTS && !$result) {
             $this->addError($item, 'db_exists', $value, $rule_value['message']);
         }
     }
 
+    /**
+     * Validates if the value is a valid domain.
+     * 
+     * @param string $value The value to check.
+     * @return bool True if valid, otherwise false.
+     */
     private function isValidDomain(string $value): bool
     {
         return preg_match("/^([a-z\d](-*[a-z\d])*)(\.([a-z\d](-*[a-z\d])*))*$/i", $value) &&
@@ -250,6 +290,12 @@ class Validate
             preg_match("/^[^\.]{1,63}(\.[^\.]{1,63})*$/", $value);
     }
 
+    /**
+     * Validates a password according to specific rules.
+     * 
+     * @param string $password The password to check.
+     * @return string The cleaned password.
+     */
     public function validatePassword($password)
     {
         $errors = [];
@@ -277,6 +323,11 @@ class Validate
         return cleanInput($password);
     }
 
+    /**
+     * Handles errors by redirecting to the request page with an error message.
+     * 
+     * @param array $errors The errors to handle.
+     */
     private function handleErrors($errors)
     {
         redirection(getRequestPage(), implode(", ", $errors), 'info');
